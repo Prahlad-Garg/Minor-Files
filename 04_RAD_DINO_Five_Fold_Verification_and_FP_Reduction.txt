@@ -1,0 +1,29 @@
+FILE: 04_RAD_DINO_Five_Fold_Verification_and_FP_Reduction.ipynb
+WHAT THE NOTEBOOK DOES
+1. Finds the Stage-1 RT-DETR proposal CSV.
+2. Loads the original radiographs and generates two crops per proposal: a local crop and a wider context crop.
+3. Builds a 22-dimensional tabular feature vector from box geometry, proposal rank, overlap and detector confidence/context statistics.
+4. Builds patient-grouped five-fold splits.
+5. Trains a fully fine-tuned RAD-DINO verifier shared across both image views, with a tabular MLP/fusion head and training stabilizers.
+6. Selects the score head and blend on validation data, then reports pooled out-of-fold test metrics and pruning performance.
+7. Produces ROC/PR and FP trade-off plots.
+
+RESULTS RECORDED IN THE NOTEBOOK
+- Stage-1 input: 10,094 proposals from 2,018 patients; TP rate 12.1%; about 5 proposals/patient.
+- All 2,018 images were found and all 10,094 crops were valid.
+- Tabular feature dimension: 22.
+- Detector confidence alone: AUROC 0.7998, AUPRC 0.4305.
+- LightGBM tabular model: AUROC 0.8864 (95% CI 0.876–0.897), AUPRC 0.5560 (0.519–0.589).
+- RAD-DINO verifier: AUROC 0.8861 (0.876–0.896), AUPRC 0.5537 (0.520–0.587).
+- Verifier + LightGBM blend: AUROC 0.8913 (0.881–0.901), AUPRC 0.5667 (0.532–0.598).
+- The reported paired AUPRC differences were not statistically significant.
+- At the validation-selected pruning operating point: detector confidence recall 0.907, precision 0.177, 2.550 FP/image, 42.0% FP reduction; LightGBM recall 0.912, precision 0.275, 1.457 FP/image, 66.9% reduction; RAD-DINO recall 0.907, precision 0.279, 1.421 FP/image, 67.7% reduction; blend recall 0.916, precision 0.274, 1.466 FP/image, 66.7% reduction.
+
+POSSIBLE UPGRADES
+- The notebook's prose says patient-level 60/20/20, while the implementation constructs five folds with internal train/validation/test partitions. Document the exact split protocol precisely.
+- Ensure every patient contributes to only the intended partition for each fold, and explain how pooled out-of-fold predictions are assembled.
+- Add a direct ablation: local-only, context-only, tabular-only, RAD-DINO-only, and fused model.
+- The blend's AUPRC improvement over LightGBM is reported as not statistically significant; avoid claiming a proven improvement.
+- Report confidence intervals for precision, recall and FP/image as well as AUROC/AUPRC.
+- Add calibration and subgroup analysis, and inspect false-positive/false-negative crops.
+- Reduce memory use by streaming crops/features in batches if the full crop tensor strains GPU memory.

@@ -1,0 +1,30 @@
+FILE: 01_RAD_DINO_Finetuning_and_Fusion.ipynb
+WHAT THE NOTEBOOK DOES
+1. Installs/imports the libraries and fixes random seeds.
+2. Loads 61,471 pre-generated ROI crops and metadata (44,093 train, 8,713 validation, 8,665 test).
+3. Checks that patient IDs do not overlap between train, validation and test.
+4. Resizes while preserving aspect ratio, pads to 224x224, normalizes using RAD-DINO preprocessing, and applies mild affine/brightness augmentation.
+5. Loads microsoft/rad-dino and fine-tunes the last six transformer blocks plus the classification head.
+6. Uses early stopping based on validation average precision.
+7. Combines detector confidence with RAD-DINO probability, and also learns a logistic-regression score fusion.
+8. Selects thresholds using validation data to retain at least 74% of positive proposals, then evaluates on test.
+9. Plots training/precision-recall curves.
+
+RESULTS RECORDED IN THE NOTEBOOK
+- Trainable parameters: 42.93M out of 86.98M.
+- Training stopped early at epoch 5 (no validation AP improvement for 3 epochs).
+- Best validation: AUROC 0.7607, AP 0.5877.
+- Test: AUROC 0.7881, AP 0.6113.
+- Detector confidence baseline: 63.86% FP reduction, 77.92% TP retention, AUC 0.7855, AP 0.6015.
+- Confidence × RAD-DINO: 64.44% FP reduction, 79.83% TP retention, AUC 0.8057, AP 0.6343.
+- Learned logistic-regression fusion: 66.07% FP reduction, 79.28% TP retention, AUC 0.8076, AP 0.6377.
+- At fixed threshold 0.1, confidence × RAD-DINO gave 72.36% FP reduction and 74.14% TP retention.
+
+POSSIBLE UPGRADES
+- Verify that the ROI metadata labels and split definitions are correct and that no image-level or patient-level leakage exists.
+- Add a patient-level grouped cross-validation experiment and report mean ± confidence intervals.
+- Compare frozen RAD-DINO, last-block fine-tuning, and full fine-tuning under the same split.
+- Track validation loss/AP and calibration; the rising validation loss after epoch 2 suggests overfitting.
+- Tune threshold only on validation and keep test strictly for final reporting.
+- Report precision, recall, F1, FP/image and sensitivity at a fixed FP/image, not AUC/AP alone.
+- Add bootstrap confidence intervals and save model weights, predictions, configuration and split IDs.

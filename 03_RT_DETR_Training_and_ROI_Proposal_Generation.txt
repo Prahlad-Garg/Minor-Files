@@ -1,0 +1,27 @@
+FILE: 03_RT_DETR_Training_and_ROI_Proposal_Generation.ipynb
+WHAT THE NOTEBOOK DOES
+1. Installs dependencies and checks the Kaggle GPU environment.
+2. Finds/unzips the preprocessed RT-DETR dataset and writes a runtime YAML file.
+3. Detects prior checkpoints and calculates the next training chunk, allowing training to resume across Kaggle sessions.
+4. Trains RT-DETR-L using AdamW and the configured detector hyperparameters, in chunks of 10 epochs toward a 72-epoch target.
+5. Packages checkpoints and logs for the next Kaggle session.
+6. Runs inference on 4,003 test images, extracts candidate bounding boxes, calculates proposal IoU/labels, and creates context-padded ROI crops for Stage 2.
+7. Saves versioned and standard proposal CSV files and a crop archive.
+
+RESULTS RECORDED IN THE NOTEBOOK
+- Environment: PyTorch 2.11.0+cu128, CUDA available, 2 Tesla T4 GPUs detected (training log shows CUDA:0).
+- The notebook resumed from a checkpoint with 10 completed epochs and trained another 10, reaching 20/72 epochs.
+- Validation summary after the run: 4,003 images, 1,421 instances; precision 0.342, recall 0.383, mAP50 0.300, mAP50-95 0.112.
+- Model summary: 31,985,795 parameters and 105.3 GFLOPs.
+- Generated 10,094 candidate proposals from 4,003 test images; archived 10,094 ROI crops.
+- Reported benchmark comparison at epoch 20: Recall@0.5 82.8% vs paper target 80.2%; Precision@0.5 12.1% vs paper target 76.6%; F1 21.1% vs paper target 78.4%; FP/image 2.217 vs paper target about 0.75.
+
+POSSIBLE UPGRADES
+- Complete the planned 72 epochs only if validation metrics continue improving; save and compare the best checkpoint, not merely the latest.
+- Investigate the very low precision/high false-positive count: tune confidence/NMS settings and inspect false-positive examples.
+- Verify the benchmark protocol is identical to the cited paper (IoU, confidence threshold, image split, matching rules and FP/image definition) before comparing.
+- Use a patient-level held-out test set and avoid using test labels to tune detector thresholds.
+- Add per-epoch precision, recall, mAP50, mAP50-95 and FP/image plots.
+- Validate box coordinate scaling and image dimensions when creating crops.
+- Store dataset version, YAML, checkpoint, random seed and exact training arguments with each chunk.
+- The recorded run is at 20/72 epochs; do not describe it as a completed 72-epoch training.

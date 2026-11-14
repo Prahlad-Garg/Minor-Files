@@ -1,0 +1,29 @@
+FILE: 05_ROI_Classifier_Model_Comparison.ipynb
+WHAT THE NOTEBOOK DOES
+1. Loads the 10,094 candidate ROI crops and maps their crop paths to the local test-crop directory.
+2. Creates a patient-grouped train/validation/test split (no patient overlap).
+3. Builds and trains five ImageNet-pretrained image classifiers: DenseNet201, InceptionV3, ResNet101, ConvNeXt-Small and EfficientNetV2-S.
+4. Replaces each model's final classification layer with a binary TP/FP classifier.
+5. Selects a threshold on validation data to target 95% TP retention, then evaluates false-positive pruning on the test split.
+6. Compares each classifier and the mean-probability ensemble.
+
+RESULTS RECORDED IN THE NOTEBOOK
+- 10,094 crops from 2,018 patients.
+- Split sizes: train 6,796, validation 1,639, test 1,659.
+- Test set: 1,659 crops, 188 true detections (11.3% positive).
+- Results at the validation-selected threshold:
+  * DenseNet201: FP reduction 19.103%, TP retention 89.362%, accuracy 27.064%, loss 0.396, AUC 0.675.
+  * InceptionV3: FP reduction 11.081%, TP retention 98.936%, accuracy 21.037%, loss 0.388, AUC 0.699.
+  * ResNet101: FP reduction 11.829%, TP retention 96.809%, accuracy 21.459%, loss 0.404, AUC 0.695.
+  * ConvNeXt-Small: FP reduction 15.976%, TP retention 93.085%, accuracy 24.714%, loss 0.464, AUC 0.694.
+  * EfficientNetV2-S: FP reduction 11.829%, TP retention 93.617%, accuracy 21.097%, loss 0.442, AUC 0.675.
+  * Mean ensemble: FP reduction 15.432%, TP retention 94.149%, accuracy 24.352%, loss 0.410, AUC 0.709.
+
+POSSIBLE UPGRADES
+- DenseNet201 has the largest FP reduction in this run, while the ensemble has the highest AUC; compare models at the same clinically meaningful sensitivity/TP-retention target.
+- The stated target is 95% TP retention, but observed test retention varies; this is expected because the threshold is selected on validation. Report this clearly.
+- Add PR-AUC, precision, recall, F1 and FP/image; accuracy is not very informative with strong class imbalance.
+- Use class-weighted loss or focal loss and evaluate calibrated probabilities.
+- Add stronger but medically safe augmentation and compare frozen-backbone vs partial/full fine-tuning.
+- Repeat with grouped cross-validation and patient-level confidence intervals.
+- Save the best checkpoint, validation threshold, predictions and split IDs for reproducibility.
